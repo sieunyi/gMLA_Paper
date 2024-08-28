@@ -567,7 +567,7 @@ page_sequence = [
    WelcomeStructure,
     HowToWin,
     EarningsCalculation,  #  example,
-    ConsentForm,
+   # ConsentForm,
     InvestmentPage,
     DiceRollingPage,
     ResultsPage,
