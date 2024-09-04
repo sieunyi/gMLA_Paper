@@ -7,7 +7,7 @@ from otree.api import Currency as c, currency_range
 
 
 class Countdown(Page):
-    timeout_seconds = 60
+    timeout_seconds = 180
 
     def is_displayed(self):
         return self.round_number == Constants.individual_rounds + 1
@@ -67,6 +67,8 @@ class example(Page):
         return self.round_number == 1
 
 class IndividualRoundsSummary(Page):
+    form_model = 'player'
+    form_fields = ['close_field']
     def is_displayed(self):
         return self.round_number == Constants.individual_rounds
 
@@ -176,31 +178,45 @@ class TotalEarningsPage(Page):
     def is_displayed(self):
         return self.round_number in [3, 6]
 
+
 class GroupInvestmentStart(Page):
     def is_displayed(self):
         return self.round_number == Constants.individual_rounds + 1
-
     def vars_for_template(self):
         return {
             'group_round': self.round_number - Constants.individual_rounds,
-            'total_group_rounds': Constants.group_rounds
         }
 
-
-class GroupWaitPage(WaitPage):
+class GroupInvestmentStart2(Page):
     def is_displayed(self):
         return self.round_number == Constants.individual_rounds + 1
+    def vars_for_template(self):
+        return {
+            'group_round': self.round_number - Constants.individual_rounds,
+        }
 
-    def after_all_players_arrive(self):
-        pass
+class GroupInvestmentStart3(Page):
+    def is_displayed(self):
+        return self.round_number == Constants.individual_rounds + 1
+    def vars_for_template(self):
+        return {
+            'group_round': self.round_number - Constants.individual_rounds,
+            'page_type': 'start' if self.round_number == Constants.individual_rounds + 1 else 'instructions'
 
+        }
 
+class GroupInvestmentStart4(Page):
+    def is_displayed(self):
+        return self.round_number == Constants.individual_rounds + 1
+    def vars_for_template(self):
+        return {
+            'group_round': self.round_number - Constants.individual_rounds,
+            'page_type': 'start' if self.round_number == Constants.individual_rounds + 1 else 'instructions'
+
+        }
 class GroupInvestmentPage(Page):
     form_model = 'group'
     form_fields = ['group_investment']
-
-    def is_displayed(self):
-        return not self.player.is_individual_round and not self.group.investment_agreed
 
     def vars_for_template(self):
         if self.group.field_maybe_none('success_number_group') is None:
@@ -208,50 +224,67 @@ class GroupInvestmentPage(Page):
             for p in self.group.get_players():
                 p.success_number_group = self.group.success_number_group
 
-        group_investment = self.group.field_maybe_none('group_investment')
-        if group_investment is None:
-            group_investment = 0  # Set a default value of 0
-            self.group.group_investment = group_investment
-
         return {
             'success_number': self.group.success_number_group,
             'partner_id': self.player.get_others_in_group()[0].id_in_group,
             'group_round': self.round_number - Constants.individual_rounds,
             'total_group_rounds': Constants.group_rounds,
-            'group_investment': group_investment,
+            'group_investment': self.group.field_maybe_none('group_investment') or 0,
         }
 
+    @staticmethod
     def live_method(player, data):
-        if data['type'] == 'investment':
-            player.group.group_investment = float(data['value'])
-            player.investment_amount = float(data['value'])
-            return {0: {'type': 'investment', 'value': player.group.group_investment}}
+        group = player.group
+        players = group.get_players()
+        round_count = group.field_maybe_none('round_count') or 0
 
-        elif data['type'] == 'propose':
-            player.proposed_investment = float(data['value'])
-            if all(p.field_maybe_none('proposed_investment') is not None for p in player.group.get_players()):
-                return {0: {'type': 'both_proposed'}}
-            else:
-                return {0: {'type': 'propose', 'id': player.id_in_group}}
+        if data['type'] == 'propose':
+            player.investment_amount = float(data['amount'])
 
-        elif data['type'] == 'finalize':
-            player.finalized_investment = float(data['value'])
-            if all(p.field_maybe_none('finalized_investment') is not None for p in player.group.get_players()):
-                investments = [p.finalized_investment for p in player.group.get_players()]
-                investments_match = len(set(investments)) == 1
-                if investments_match:
-                    player.group.investment_agreed = True
-                    player.group.group_investment = investments[0]
-                return {0: {'type': 'both_finalized', 'match': investments_match}}
+            if all(p.field_maybe_none('investment_amount') is not None for p in players):
+                round_count += 1
+                group.round_count = round_count
+
+                # Check if proposals match
+                if players[0].investment_amount == players[1].investment_amount:
+                    group.group_investment = players[0].investment_amount
+                    group.investment_agreed = True
+                    return {0: {'type': 'round_result', 'round': round_count, 'match': True,
+                                'amount': group.group_investment}}
+                else:
+                    # Reset proposals for next round
+                    for p in players:
+                        p.investment_amount = None
+
+                    if round_count > 3:  # Changed from >= 4 to > 3
+                        default_options = [0, 0.5, 1, 1.5, 2]
+                        group.group_investment = random.choice(default_options)
+                        group.investment_agreed = True
+                        return {0: {'type': 'round_result', 'round': round_count, 'match': False,
+                                    'amount': group.group_investment}}
+                    else:
+                        return {0: {'type': 'round_result', 'round': round_count, 'match': False}}
+
+        return {player.id_in_group: {'type': 'wait'}}
+
+    def is_displayed(self):
+        return not self.player.is_individual_round and not self.group.field_maybe_none('investment_agreed')
 
     def before_next_page(self):
-        if self.group.investment_agreed:
-            for p in self.group.get_players():
-                p.investment_amount = self.group.group_investment
+        if not self.group.field_maybe_none('investment_agreed'):
+            default_options = [0, 0.5, 1, 1.5, 2]
+            self.group.group_investment = random.choice(default_options)
+            self.group.investment_agreed = True
 
-        print(f"Group investment set to: {self.group.group_investment} ")
         for p in self.group.get_players():
-            print(f"Player {p.id_in_group} investment amount: {p.investment_amount} ")
+            p.investment_amount = self.group.group_investment
+
+    def error_message(self, values):
+        if not self.group.field_maybe_none('investment_agreed'):
+            return "You must reach an agreement before proceeding."
+
+
+
 class GroupInvestmentWaitPage(WaitPage):
     def is_displayed(self):
         return self.round_number > Constants.individual_rounds
@@ -364,6 +397,9 @@ class GroupEndSlide(Page):
 
 
 class GroupInvestmentSummary(Page):
+    form_model = 'player'
+    form_fields = ['close_field']
+
     def is_displayed(self):
         return self.round_number == Constants.num_rounds
 
@@ -375,10 +411,12 @@ class GroupInvestmentSummary(Page):
         return {
             'group_rounds': group_rounds,
             'total_group_earnings': total_group_earnings,
-            'group_earnings': total_group_earnings,  # Add this line
+            'group_earnings': total_group_earnings,
             'final_earnings': self.participant.payoff
         }
 
+    def get_form_fields(self):
+        return ['close_field']
 class SurveyIntroduc(Page):
     template_name = 'investment_game/SurveyIntroduc.html'
 
@@ -535,17 +573,6 @@ class EndPage(Page):
         self.player.exit_survey_completed = True
     pass
 
-class IndividualRoundsSummary(Page):
-    def is_displayed(self):
-        return self.round_number == Constants.individual_rounds
-
-    def vars_for_template(self):
-        total_earnings = sum([p.earnings for p in self.player.in_all_rounds() if p.round_number <= Constants.individual_rounds])
-        return {
-            'total_earnings': total_earnings,
-            'individual_rounds': Constants.individual_rounds,
-            'rounds': self.player.in_rounds(1, Constants.individual_rounds)
-        }
 
 class GroupInvestmentSummary(Page):
     def is_displayed(self):
@@ -566,16 +593,19 @@ class GroupInvestmentSummary(Page):
 page_sequence = [
    WelcomeStructure,
     HowToWin,
-    EarningsCalculation,  #  example,
-   # ConsentForm,
+    EarningsCalculation,
+    example,
     InvestmentPage,
     DiceRollingPage,
     ResultsPage,
     PauseSlide,
     EndSlide,
     IndividualRoundsSummary,
-    Countdown,
+     Countdown,
     GroupInvestmentStart,
+    GroupInvestmentStart2,
+    GroupInvestmentStart3,
+    GroupInvestmentStart4,
     GroupInvestmentWaitPage,
     GroupInvestmentPage,
     GroupInvestmentWaitPage,

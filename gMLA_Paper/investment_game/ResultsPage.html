@@ -7,29 +7,52 @@
 {% endblock %}
 
 {% block content %}
-<p>You decided to invest: <span style="color: blue; font-weight: bold;" id="investment">{{ investment }}</span></p>
-<p>Your success number is: <span style="color: blue; font-weight: bold;">{{ success_number }}</span></p>
-<p>You got: <span style="color: {% if success %}green{% else %}red{% endif %}; font-weight: bold;">{{ dice_roll }}</span></p>
+<h3>You decided to invest: <span style="color: blue; font-weight: bold;" id="investment">{{ investment }}</span></h3>
+<h3>Your success number is: <span style="color: blue; font-weight: bold;">{{ success_number }}</span></h3>
+<h3>You got: <span style="color: {% if success %}green{% else %}red{% endif %}; font-weight: bold;">{{ dice_roll }}</span></h3>
 
 <hr style="border-top: 1px solid #ccc; margin: 20px 0;">
 {% if success %}
-    <p>Investment result: <span style="color: green; font-weight: bold;">Success</span></p>
+    <h3>Investment result: <span style="color: green; font-weight: bold;">Success</span></h3>
 {% else %}
-    <p>Investment result: <span style="color: red; font-weight: bold;">Failure</span></p>
+    <h3>Investment result: <span style="color: red; font-weight: bold;">Failure</span></h3>
 {% endif %}
 
 <hr style="border-top: 1px solid #ccc; margin: 20px 0;">
 
-<p>Your earnings for this round: <span style="color: {% if success %}green{% else %}red{% endif %}; font-weight: bold;" id="earnings">{{ earnings }}</span></p>
+<h3>Your earnings for this round: <span style="color: {% if success %}green{% else %}red{% endif %}; font-weight: bold;" id="earnings">{{ earnings }}</span></h3>
 
-    {% next_button %}
- <script>
-       document.addEventListener('DOMContentLoaded', function() {
-    var investmentElement = document.getElementById('investment');
-    var earningsElement = document.getElementById('earnings');
+<p id="timer-message" style="display: none;"> We are calculating your total earnings. Please wait: (<span id="countdown">5</span>)</p>
 
-    investmentElement.textContent = '$' + investmentElement.textContent;
-    earningsElement.textContent = '$' + earningsElement.textContent;
-});
-    </script>
+<div id="next-button-container">
+    <button id="next-button" class="otree-btn-next btn btn-primary">Next</button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var investmentElement = document.getElementById('investment');
+        var earningsElement = document.getElementById('earnings');
+        var nextButton = document.getElementById('next-button');
+        var timerMessage = document.getElementById('timer-message');
+        var countdownElement = document.getElementById('countdown');
+
+        investmentElement.textContent = '$' + investmentElement.textContent;
+        earningsElement.textContent = '$' + earningsElement.textContent;
+
+        nextButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            this.disabled = true;
+            timerMessage.style.display = 'block';
+            var secondsLeft = 5;
+            var countdownTimer = setInterval(function() {
+                secondsLeft--;
+                countdownElement.textContent = secondsLeft;
+                if (secondsLeft <= 0) {
+                    clearInterval(countdownTimer);
+                    document.querySelector('form').submit();
+                }
+            }, 1000);
+        });
+    });
+</script>
 {% endblock %}

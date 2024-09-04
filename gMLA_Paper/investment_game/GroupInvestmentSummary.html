@@ -3,16 +3,23 @@
 {% load custom_filters %}
 
 {% block title %}
+Group Earnings Summary
 {% endblock %}
 
 {% block content %}
 
-<p>Total group earnings: <strong id="totalGroupEarnings">{{ total_group_earnings }}</strong></p>
-<p>Individual earnings: <strong id="individualEarnings"></strong></p>
-<p>Now remember this investment amount.</p>
-<p>You can go to the cashier to exchange your investment amount. If your investment amount is negative, you have to pay the cashier. If it's positive, you will be paid.</p>
-<p>Click "next" when you have exchanged your money.</p>
-{% next_button %}
+<h3>Total group earnings: <strong id="totalGroupEarnings">{{ total_group_earnings }}</strong></h3>
+<h3>Individual earnings: <strong id="individualEarnings"></strong></h3>
+<hr style="border-top: 1px solid #ccc; margin: 20px 0;">
+
+<h3>Raise your hand to exchange your investment amount. If your investment amount is negative, you have to pay the cashier. If it's positive, you will be paid.</h3>
+
+<input type="text" name="close_field" id="id_close_field">
+
+<div id="next-button-container" style="display: none;">
+    {% next_button %}
+</div>
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -45,6 +52,18 @@
         } else {
             individualEarningsElement.style.color = 'red';
         }
+
+
+       var closeField = document.getElementById('id_close_field');
+        var nextButtonContainer = document.getElementById('next-button-container');
+
+        closeField.addEventListener('input', function() {
+            if (this.value === '1') {
+                nextButtonContainer.style.display = 'block';
+            } else {
+                nextButtonContainer.style.display = 'none';
+            }
+        });
     });
 </script>
 

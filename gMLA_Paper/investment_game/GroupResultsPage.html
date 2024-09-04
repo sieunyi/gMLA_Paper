@@ -7,21 +7,21 @@ Group Round {{ group_round }} of {{ total_group_rounds }}
 {% endblock %}
 
 {% block content %}
-<p>Your group decided to invest: <span id="group_investment" style="color: blue; font-weight: bold;">{{ group_investment }}</span></p>
+<h3>Your group decided to invest: <span id="group_investment" style="color: blue; font-weight: bold;">{{ group_investment }}</span></h3>
 
-<p>Your group's success number was: <span style="color: blue; font-weight: bold;">{{ success_number }}</span></p>
-<p>Your group got: <span style="color: {% if success %}green{% else %}red{% endif %}; font-weight: bold;">{{ dice_roll }}</span></p>
+<h3>Your group's success number was: <span style="color: blue; font-weight: bold;">{{ success_number }}</span></h3>
+<h3>Your group got: <span style="color: {% if success %}green{% else %}red{% endif %}; font-weight: bold;">{{ dice_roll }}</span></h3>
 
 <hr style="border-top: 1px solid #ccc; margin: 20px 0;">
 {% if success %}
-    <p>Investment result: <span style="color: green; font-weight: bold;">Success</span></p>
+    <h3>Investment result: <span style="color: green; font-weight: bold;">Success</span></h3>
 {% else %}
-    <p>Investment result: <span style="color: red; font-weight: bold;">Failure</span></p>
+    <h3>Investment result: <span style="color: red; font-weight: bold;">Failure</span></h3>
 {% endif %}
 
 <hr style="border-top: 1px solid #ccc; margin: 20px 0;">
 
-<p>Group earnings in this round: <span id="group_earnings" style="color: {% if group_earnings >= 0 %}green{% else %}red{% endif %}; font-weight: bold;">{{ group_earnings }}</span></p>
+<h3>Group earnings in this round: <span id="group_earnings" style="color: {% if group_earnings >= 0 %}green{% else %}red{% endif %}; font-weight: bold;">{{ group_earnings }}</span></h3>
 
 {% next_button %}
 

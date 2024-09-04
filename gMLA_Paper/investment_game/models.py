@@ -4,6 +4,8 @@ from otree.api import (
 )
 from otree.api import Page
 import random
+import json
+
 
 class Constants(BaseConstants):
     name_in_url = "investment_game"
@@ -45,11 +47,8 @@ class Subsession(BaseSubsession):
 
 
 class Group(BaseGroup):
-    group_investment = models.FloatField(
-        min=0,
-        max=2,
-        label="We would like to invest"
-    )
+    group_investment = models.FloatField(initial=0)
+
     dice_roll = models.IntegerField()
     success = models.BooleanField()
     group_earnings = models.CurrencyField()
@@ -57,9 +56,24 @@ class Group(BaseGroup):
     chat_history = models.LongStringField(initial='')
     investment_agreed = models.BooleanField(initial=False)
     fourth_round_earnings = models.CurrencyField()
+    chat_messages = models.LongStringField(initial='[]')
+    round_count = models.IntegerField(initial=1)
+
+    def append_chat_message(self, sender, message):
+        messages = json.loads(self.chat_messages)
+        messages.append({
+            'sender': sender,
+            'message': message,
+            'timestamp': int(time.time())
+        })
+        self.chat_messages = json.dumps(messages)
 
     def live_chat(self, id_in_group, data):
         response = {'id_in_group': id_in_group, 'message': data}
+        chat_history = json.loads(self.chat_history)
+        chat_history.append(response)
+        self.chat_history = json.dumps(chat_history)
+
         return {0: response}
 
 class Player(BasePlayer):
@@ -78,9 +92,11 @@ class Player(BasePlayer):
     agreed_on_investment = models.BooleanField(initial=False)
     agreed_investment = models.FloatField(blank=True)
     proposed_investment = models.FloatField()
-    investment_amount = models.FloatField()
+    investment_amount = models.FloatField(blank=True, null=True)
     partner_id = models.IntegerField()
     investment = models.FloatField(initial=0)
+    submitted_investment = models.FloatField(blank=True, null=True)
+    close_field = models.StringField(blank=True)
 
     def set_earnings(self):
         if self.is_individual_round:

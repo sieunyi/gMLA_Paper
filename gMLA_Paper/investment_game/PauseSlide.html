@@ -5,14 +5,18 @@
 {% block title %} {% endblock %}
 
 {% block content %}
-    <p>Your total earnings from these three rounds are: <span style="color: blue; font-weight: bold;" id="totalEarnings">${{ total_earnings }}</span></p>
+    <h3>Your total earnings from these three rounds are: <span style="color: blue; font-weight: bold;" id="totalEarnings">${{ total_earnings }}</span></h3>
     <hr style="border-top: 1px solid #ccc; margin: 20px 0;">
 
-    <p>Please type 'continue' in the box below to determine your final investment earnings.</p>
+    <h3>Please type 'continue' in the box below to determine your final investment earnings.</h3>
 
     {% formfield 'close_field' label="" %}
 
-    {% next_button %}
+    <p id="timer-message" style="display: none;">You will be redirected to the next page in <span id="countdown">15</span> seconds</p>
+
+    <div id="next-button-container" style="display: none;">
+        <button id="next-button" class="otree-btn-next btn btn-primary">Next</button>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -38,6 +42,35 @@
                     individualEarningsElement.innerText = '$' + individualEarnings.toFixed(2);
                 }
             }
+
+            var closeField = document.getElementById('id_close_field');
+            var timerMessage = document.getElementById('timer-message');
+            var countdownElement = document.getElementById('countdown');
+            var nextButtonContainer = document.getElementById('next-button-container');
+            var nextButton = document.getElementById('next-button');
+
+            closeField.addEventListener('input', function() {
+                if (this.value.toLowerCase() === 'continue') {
+                    nextButtonContainer.style.display = 'block';
+                } else {
+                    nextButtonContainer.style.display = 'none';
+                }
+            });
+
+            nextButton.addEventListener('click', function(event) {
+                event.preventDefault();
+                this.disabled = true;
+                timerMessage.style.display = 'block';
+                var secondsLeft = 15;
+                var countdownTimer = setInterval(function() {
+                    secondsLeft--;
+                    countdownElement.textContent = secondsLeft;
+                    if (secondsLeft <= 0) {
+                        clearInterval(countdownTimer);
+                        document.querySelector('form').submit(); // Submit the form after 15 seconds
+                    }
+                }, 1000);
+            });
         });
     </script>
 {% endblock %}

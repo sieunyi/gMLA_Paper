@@ -2,28 +2,42 @@
 {% load otree static %}
 {% load custom_filters %}
 
-{% block title %}
-{% endblock %}
+{% block title %}{% endblock %}
 
 {% block content %}
+    <h3>Your total earnings are: <span style="color: blue; font-weight: bold;" id="totalEarnings">${{ total_earnings }}</span></h3>
+    <hr style="border-top: 1px solid #ccc; margin: 20px 0;">
+    <h3>Please raise your hand in order to transfer your final investment earnings.</h3>
+<h3> If your investment amount is negative, you have to pay the cashier. If it's positive, you will be paid.</h3>
 
-    <p>Your total earnings are: <span style="color: blue; font-weight: bold;" id="totalEarnings">{{ total_earnings }}</span></p>
-    <p>Now remember this investment amount.</p>
-    <p>You can go to the cashier to exchange your investment amount. If your investment amount is negative, you have to pay the cashier. If it's positive, you will be paid.</p>
-    <p>Click "next" when you have exchanged your money and continue with the game.</p>
+    {% formfield 'close_field' label="" %}
 
-    {% next_button %}
+    <div id="next-button-container" style="display: none;">
+        {% next_button %}
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var earningsElement = document.getElementById('totalEarnings');
-            var earningsText = earningsElement.innerText;
+            function formatAmount(element) {
+                var amountText = element.innerText;
+                var numericValue = amountText.replace(/[^\d.-]/g, '');
+                var formattedValue = parseFloat(numericValue).toFixed(2);
+                element.innerText = '$' + formattedValue;
+            }
 
-            var numericValue = earningsText.replace(/[^\d.-]/g, '');
+            var totalEarningsElement = document.getElementById('totalEarnings');
+            formatAmount(totalEarningsElement);
 
-            var formattedValue = parseFloat(numericValue).toFixed(2);
+            var closeField = document.getElementById('id_close_field');
+            var nextButtonContainer = document.getElementById('next-button-container');
 
-            earningsElement.innerText = '$' + formattedValue;
+            closeField.addEventListener('input', function() {
+                if (this.value === '1') {
+                    nextButtonContainer.style.display = 'block';
+                } else {
+                    nextButtonContainer.style.display = 'none';
+                }
+            });
         });
     </script>
 {% endblock %}

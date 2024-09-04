@@ -1,17 +1,20 @@
 {% extends "global/Page.html" %}
-{% load otree static %}
-
 {% block title %}{% endblock %}
 
 {% block content %}
 
-<p>At the end of the third round, your result will be calculated. You will receive your earnings or pay your losses.</p>
+<h2>For example,</h2>
 
-<p>You will move on to the next part; there you will make another round of decisions. The earnings in this part will be given in the form of a separate bonus.</p>
+    <li>Let's say you invested 50 cents, and your success number was 4. </li>
 
-<p>After a short break, the group part of the game will begin with the same rules for calculating earnings.</p>
+If your die roll was 4, then you will earn $3.00 (0.5*6) from your successful investment PLUS the 50 cents you did not invest (1-0.5).
 
-<p>If you wish to continue and participate in this game, please click continue.</p>
+<li>Alternatively, if your die roll was not 4, </li>
+then you would only earn the 50 cents you did not invest.
 
- {% next_button %}
+Note that investment amounts are restricted to 25-cent increments.
+
+Click next button when you are ready to start.
+
+{% next_button %}
 {% endblock %}
